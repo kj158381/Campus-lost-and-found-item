@@ -71,32 +71,27 @@ campus_lostfound/
 | Variable      | Purpose                                              |
 |---------------|------------------------------------------------------|
 | `SECRET_KEY`  | Session signing key — **change in production**       |
-| `APP_BASE_URL`| URL encoded into QR codes (use your LAN/public URL so phones can scan) |
+| `APP_BASE_URL`| Public URL encoded into QR codes (on Render, defaults to the service URL) |
 | `DEMO_MODE`   | `1` shows demo-login buttons, `0` hides them         |
 
 To reset all data, stop the app and delete `instance/lostfound.db`.
 
-## 🚀 Deploy to Render
+## 🚀 Free demo deployment on Render
 
 1. Push this project to GitHub.
 2. In Render, choose **New → Blueprint** and select the repository. Render reads `render.yaml`,
-   builds the app, and creates a 1 GB persistent disk for the SQLite database and image uploads.
-   The blueprint uses a paid Starter web service because Render disks are not available on free web services.
-3. After deployment, open the generated `onrender.com` URL and register your account. The production
-   configuration generates a secret key and disables demo accounts and one-click demo login.
-4. To make your account an administrator, open the Render Shell and run the following, replacing
-   the email with the address you registered:
-
-   ```bash
-   python -c "from app import app; from database.models import db, User; app.app_context().push(); user = User.query.filter_by(email='you@example.com').one(); user.role = 'admin'; db.session.commit()"
-   ```
+   builds the app as a free web service, and generates a secret key.
+3. After deployment, open the generated `onrender.com` URL and register an account. Demo accounts
+   and one-click demo login are disabled.
 
 For a custom domain, set `APP_BASE_URL` in the Render environment to the public site URL so QR
 handover links point to the correct address. The `192.168.1.1` address is private to your local
 network and is not the public deployment URL.
 
-The Render disk stores both uploads and SQLite data between deploys. Keep `SECRET_KEY` private
-and do not enable `DEMO_MODE` on a public production deployment.
+**Free-tier limitation:** Render's free service has no persistent disk. SQLite data and uploaded
+images are stored on its temporary filesystem and may be erased after a restart or redeploy. Use
+this setup for demos/testing only, not for important lost-item records. Keep `SECRET_KEY` private
+and do not enable `DEMO_MODE` on a public deployment.
 
 ## 🧠 How the flow works
 
