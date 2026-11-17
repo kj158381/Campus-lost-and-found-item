@@ -1,0 +1,42 @@
+{% macro cat_info(key) %}{{ CATEGORIES.get(key, CATEGORIES['other']) }}{% endmacro %}
+
+{% macro status_badge(item) %}
+  {% set colors = {'open':'blue','claimed':'amber','returned':'green','closed':'slate'} %}
+  <span class="badge tint-{{ colors.get(item.status, 'slate') }}">{{ STATUS_LABELS.get(item.status, item.status) }}</span>
+{% endmacro %}
+
+{% macro thumb(item) %}
+  {% set c = CATEGORIES.get(item.category, CATEGORIES['other']) %}
+  <div class="item-thumb tint-{{ c[2] }}">
+    {% if item.image %}<img src="{{ url_for('static', filename='uploads/' ~ item.image) }}" alt="{{ item.title }}" loading="lazy"/>
+    {% else %}<span class="msymbol fill">{{ c[0] }}</span>{% endif %}
+    <span class="corner badge kind-{{ item.kind }}">{{ item.kind|upper }}</span>
+  </div>
+{% endmacro %}
+
+{% macro item_card(item) %}
+  {% set c = CATEGORIES.get(item.category, CATEGORIES['other']) %}
+  <a href="{{ url_for('items.detail', item_id=item.id) }}" class="card card-hover" style="padding:.8rem;text-decoration:none;display:block">
+    {{ thumb(item) }}
+    <div style="padding:.75rem .3rem .2rem">
+      <div class="flex items-start justify-between gap-2">
+        <div class="font-display t-1" style="font-weight:700;font-size:.95rem;line-height:1.3">{{ item.title }}</div>
+      </div>
+      <div class="flex items-center gap-2 mt-2 flex-wrap">
+        <span class="badge tint-{{ c[2] }}">{{ c[1] }}</span>{{ status_badge(item) }}
+      </div>
+      <div class="meta-row mt-3"><span class="msymbol">location_on</span>{{ item.location or 'Location not set' }}</div>
+      <div class="meta-row mt-1"><span class="msymbol">calendar_today</span>{{ item.date_event.strftime('%d %b %Y') }}</div>
+    </div>
+  </a>
+{% endmacro %}
+
+{% macro pager(pagination, endpoint) %}
+  {% if pagination.pages > 1 %}
+  <div class="flex items-center justify-center gap-2 mt-6">
+    {% if pagination.has_prev %}<a class="btn btn-outline btn-sm" href="{{ url_for(endpoint, page=pagination.prev_num, **kwargs) }}">← Prev</a>{% endif %}
+    <span class="t-3" style="font-size:.8rem">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+    {% if pagination.has_next %}<a class="btn btn-outline btn-sm" href="{{ url_for(endpoint, page=pagination.next_num, **kwargs) }}">Next →</a>{% endif %}
+  </div>
+  {% endif %}
+{% endmacro %}

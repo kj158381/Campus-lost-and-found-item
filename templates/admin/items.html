@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge with context %}
+{% block title %}All Reports — Campus Lost & Found{% endblock %}
+{% block page_title %}All Reports{% endblock %}
+{% block content %}
+<form method="get" class="mb-4" style="max-width:360px"><div class="input-icon"><span class="msymbol">search</span><input class="input" name="q" value="{{ q }}" placeholder="Search by title…"/></div></form>
+<div class="card" style="padding:0"><div class="table-wrap"><table class="tbl">
+  <thead><tr><th>Item</th><th>Type</th><th>Location</th><th>Reporter</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>
+  {% for it in items %}
+  {% set c = CATEGORIES.get(it.category, CATEGORIES['other']) %}
+  <tr>
+    <td><a href="{{ url_for('items.detail', item_id=it.id) }}" class="flex items-center gap-3" style="text-decoration:none"><div class="icon-tile sm tint-{{ c[2] }}"><span class="msymbol fill">{{ c[0] }}</span></div><span class="t-1" style="font-weight:600">{{ it.title }}</span></a></td>
+    <td><span class="badge kind-{{ it.kind }}">{{ it.kind|upper }}</span></td>
+    <td class="t-2">{{ it.location }}</td><td class="t-2">{{ it.owner.name }}</td>
+    <td>{{ status_badge(it) }}</td><td class="t-3">{{ it.date_event.strftime('%d %b %Y') }}</td>
+    <td style="text-align:right"><form method="post" action="{{ url_for('items.delete', item_id=it.id) }}" style="margin:0" data-confirm="Delete “{{ it.title|replace('"','') }}” permanently?">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}"/><input type="hidden" name="next" value="/admin/items"/>
+      <button class="btn btn-danger btn-sm"><span class="msymbol xs-icon">delete</span></button></form></td>
+  </tr>{% else %}<tr><td colspan="7"><div class="empty">No reports found.</div></td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

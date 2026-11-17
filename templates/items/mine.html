@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% from "_macros.html" import item_card with context %}
+{% block title %}My Reports — Campus Lost & Found{% endblock %}
+{% block page_title %}My Reports{% endblock %}
+{% block page_sub %}<p class="t-3" style="font-size:.85rem;margin:0">Everything you've reported lost or found</p>{% endblock %}
+{% block header_actions %}
+  <a href="{{ url_for('items.new', kind='found') }}" class="btn btn-outline">Report found</a>
+  <a href="{{ url_for('items.new', kind='lost') }}" class="btn btn-primary">Report lost</a>{% endblock %}
+{% block content %}
+{% if items %}<div class="item-grid">{% for it in items %}{{ item_card(it) }}{% endfor %}</div>
+{% else %}<div class="card empty"><span class="msymbol">inventory_2</span><h3 class="font-display t-1" style="margin:.5rem 0 .2rem">No reports yet</h3>
+  <p style="font-size:.88rem">When you report something it will show up here with its matches.</p></div>{% endif %}
+{% endblock %}

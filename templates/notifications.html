@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Notifications — Campus Lost & Found{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block header_actions %}
+  {% if notes|selectattr('is_read','equalto',False)|list %}
+  <form method="post" action="{{ url_for('main.read_all') }}" style="margin:0"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+    <button class="btn btn-outline btn-sm"><span class="msymbol xs-icon">done_all</span>Mark all read</button></form>{% endif %}
+{% endblock %}
+{% block content %}
+{% set icons = {'match':('auto_awesome','purple'),'claim':('verified_user','amber'),'message':('chat_bubble','blue'),'success':('task_alt','green'),'info':('info','slate')} %}
+<div class="card" style="padding:0;overflow:hidden;max-width:760px">
+  {% for n in notes %}
+  {% set ic = icons.get(n.kind, icons['info']) %}
+  <a href="{{ url_for('main.go', nid=n.id) }}" class="notif {{ 'unread' if not n.is_read }}">
+    <div class="icon-tile sm tint-{{ ic[1] }}"><span class="msymbol fill">{{ ic[0] }}</span></div>
+    <div style="flex:1;min-width:0"><div class="t-1" style="font-weight:600;font-size:.87rem">{{ n.title }}</div>
+      <div class="t-2" style="font-size:.8rem">{{ n.body }}</div></div>
+    <div class="t-3" style="font-size:.7rem;white-space:nowrap">{{ time_ago(n.created_at) }}</div>
+  </a>
+  {% else %}<div class="empty"><span class="msymbol">notifications_off</span><p style="margin:.4rem 0 0;font-size:.88rem">You're all caught up.</p></div>{% endfor %}
+</div>
+{% endblock %}

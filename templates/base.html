@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="csrf" content="{{ csrf_token() }}"/>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}"/>
+  <title>{% block title %}Campus Lost &amp; Found{% endblock %}</title>
+  <script>
+    (function(){var t=localStorage.getItem('clf_theme')||'light';
+      if(t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');})();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={corePlugins:{preflight:false},theme:{extend:{}}}</script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"/>
+  {% block head %}{% endblock %}
+</head>
+<body>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-wrap">
+    {% for cat, msg in messages %}
+    <div class="flash {{ 'success' if cat == 'success' else 'error' }}">
+      <span class="msymbol fill">{{ 'check_circle' if cat == 'success' else 'error' }}</span>
+      <span class="txt">{{ msg }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+{% block full_page %}
+<div class="app-shell">
+  <div class="scrim" id="scrim" onclick="toggleSidebar(false)"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"><span class="msymbol fill" style="font-size:20px">travel_explore</span></div>
+      <div><div class="logo-text">Campus L&amp;F</div><div class="logo-sub">Lost &amp; Found Portal</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      {% set ep = request.endpoint or '' %}
+      <a href="{{ url_for('items.new', kind='lost') }}" class="btn btn-primary" style="margin-bottom:.4rem"><span class="msymbol sm-icon">add</span>Report an Item</a>
+
+      <div class="nav-label">Main</div>
+      <a href="{{ url_for('main.dashboard') }}" class="nav-link {{ 'active' if ep == 'main.dashboard' }}"><span class="msymbol">dashboard</span>Dashboard</a>
+      <a href="{{ url_for('items.browse') }}" class="nav-link {{ 'active' if ep in ('items.browse','items.detail') }}"><span class="msymbol">search</span>Browse Items</a>
+      <a href="{{ url_for('items.mine') }}" class="nav-link {{ 'active' if ep == 'items.mine' }}"><span class="msymbol">inventory_2</span>My Reports</a>
+      <a href="{{ url_for('claims.listing') }}" class="nav-link {{ 'active' if ep in ('claims.listing','claims.view') }}"><span class="msymbol">verified_user</span>Claims</a>
+
+      <div class="nav-label">Communicate</div>
+      <a href="{{ url_for('chat.inbox') }}" class="nav-link {{ 'active' if ep in ('chat.inbox','chat.thread') }}"><span class="msymbol">chat_bubble</span>Messages
+        <span id="badge-msgs" class="nav-badge {{ 'hidden' if not unread_msgs }}">{{ unread_msgs }}</span></a>
+      <a href="{{ url_for('main.notifications') }}" class="nav-link {{ 'active' if ep == 'main.notifications' }}"><span class="msymbol">notifications</span>Notifications
+        <span id="badge-notes" class="nav-badge {{ 'hidden' if not unread_notes }}">{{ unread_notes }}</span></a>
+
+      {% if user.is_admin %}
+      <div class="nav-label">Administration</div>
+      <a href="{{ url_for('admin.dashboard') }}" class="nav-link {{ 'active' if ep == 'admin.dashboard' }}"><span class="msymbol">monitoring</span>Analytics</a>
+      <a href="{{ url_for('admin.items') }}" class="nav-link {{ 'active' if ep == 'admin.items' }}"><span class="msymbol">list_alt</span>All Reports</a>
+      <a href="{{ url_for('admin.claims') }}" class="nav-link {{ 'active' if ep == 'admin.claims' }}"><span class="msymbol">fact_check</span>All Claims</a>
+      <a href="{{ url_for('admin.users') }}" class="nav-link {{ 'active' if ep == 'admin.users' }}"><span class="msymbol">manage_accounts</span>Users</a>
+      <a href="{{ url_for('claims.verify_home') }}" class="nav-link {{ 'active' if ep == 'claims.verify_home' }}"><span class="msymbol">qr_code_scanner</span>Verify Hand-over</a>
+      {% endif %}
+    </nav>
+    <div class="sidebar-user">
+      <a href="{{ url_for('main.profile') }}" class="avatar" style="background:{{ user.avatar_color }};text-decoration:none">{{ user.initials }}</a>
+      <div style="flex:1;min-width:0">
+        <div class="t-1" style="font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ user.name }}</div>
+        <div class="t-3" style="font-size:.68rem;text-transform:capitalize">{{ user.role }}</div>
+      </div>
+      <button class="btn btn-ghost btn-icon" style="width:32px;height:32px" onclick="toggleTheme()" title="Toggle theme"><span class="msymbol sm-icon" id="theme-icon">dark_mode</span></button>
+      <form method="post" action="{{ url_for('auth.logout') }}" style="margin:0">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+        <button class="btn btn-ghost btn-icon" style="width:32px;height:32px" title="Sign out"><span class="msymbol sm-icon">logout</span></button>
+      </form>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <div class="mobile-bar">
+      <button class="btn btn-ghost btn-icon" onclick="toggleSidebar(true)"><span class="msymbol">menu</span></button>
+      <div class="logo-text">Campus L&amp;F</div>
+    </div>
+    <div class="main-scroll">
+      <div class="page-header">
+        <div>
+          <h1>{% block page_title %}{% endblock %}</h1>
+          {% block page_sub %}{% endblock %}
+        </div>
+        <div class="flex items-center gap-3">{% block header_actions %}{% endblock %}</div>
+      </div>
+      <div class="page-body fade-up">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

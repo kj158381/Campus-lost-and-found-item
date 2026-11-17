@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Users — Campus Lost & Found{% endblock %}
+{% block page_title %}Users{% endblock %}
+{% block page_sub %}<p class="t-3" style="font-size:.85rem;margin:0">{{ users|length }} account{{ 's' if users|length != 1 }}</p>{% endblock %}
+{% block content %}
+<form method="get" class="mb-4" style="max-width:360px"><div class="input-icon"><span class="msymbol">search</span><input class="input" name="q" value="{{ q }}" placeholder="Search name or email…"/></div></form>
+<div class="card" style="padding:0"><div class="table-wrap"><table class="tbl">
+  <thead><tr><th>User</th><th>Department</th><th>Role</th><th>Joined</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for u in users %}
+  <tr>
+    <td><div class="flex items-center gap-3"><div class="avatar" style="background:{{ u.avatar_color }}">{{ u.initials }}</div>
+      <div><div class="t-1" style="font-weight:600">{{ u.name }}</div><div class="t-3" style="font-size:.74rem">{{ u.email }}</div></div></div></td>
+    <td class="t-2">{{ u.department or '—' }}</td>
+    <td>
+      <form method="post" action="{{ url_for('admin.set_role', uid=u.id) }}" style="margin:0"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+        <select class="select" name="role" style="width:110px;padding:.3rem .5rem;font-size:.78rem" onchange="this.form.submit()" {{ 'disabled' if u.id == user.id }}>
+          {% for r in ['student','staff','admin'] %}<option {{ 'selected' if u.role == r }}>{{ r }}</option>{% endfor %}</select></form></td>
+    <td class="t-3">{{ u.created_at.strftime('%d %b %Y') }}</td>
+    <td><span class="badge tint-{{ 'green' if u.is_active_user else 'red' }}">{{ 'Active' if u.is_active_user else 'Deactivated' }}</span></td>
+    <td style="text-align:right">{% if u.id != user.id %}
+      <form method="post" action="{{ url_for('admin.toggle_user', uid=u.id) }}" style="margin:0" data-confirm="{{ 'Deactivate' if u.is_active_user else 'Reactivate' }} {{ u.name }}?"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+        <button class="btn btn-sm {{ 'btn-danger' if u.is_active_user else 'btn-outline' }}">{{ 'Deactivate' if u.is_active_user else 'Reactivate' }}</button></form>{% endif %}</td>
+  </tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

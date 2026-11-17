@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: campus-lost-and-found
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    healthCheckPath: /
+    disk:
+      name: campus-lost-found-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_PATH
+        value: /var/data/lostfound.db
+      - key: UPLOAD_FOLDER
+        value: /var/data/uploads
+      - key: DEMO_MODE
+        value: "0"

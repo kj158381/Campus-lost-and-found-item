@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit report' if item else 'New report' }} — Campus Lost & Found{% endblock %}
+{% block page_title %}{{ 'Edit report' if item else ('Report a lost item' if kind == 'lost' else 'Report a found item') }}{% endblock %}
+{% block page_sub %}<p class="t-3" style="font-size:.85rem;margin:0">The more detail you add, the better the matching.</p>{% endblock %}
+{% block content %}
+{% set v = item or None %}
+<form method="post" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+  <input type="hidden" name="kind" value="{{ kind }}"/>
+  <div class="card lg:col-span-2 space-y-4">
+    {% if not item %}
+    <div class="tab-row">
+      <a class="tab {{ 'active' if kind=='lost' }}" style="text-decoration:none" href="{{ url_for('items.new', kind='lost') }}">I lost something</a>
+      <a class="tab {{ 'active' if kind=='found' }}" style="text-decoration:none" href="{{ url_for('items.new', kind='found') }}">I found something</a>
+    </div>{% endif %}
+    <div><label class="label">Title *</label>
+      <input class="input" name="title" maxlength="120" required placeholder="e.g. Black HP laptop bag" value="{{ request.form.get('title', v.title if v else '') }}"/></div>
+    <div><label class="label">Description</label>
+      <textarea class="textarea" name="description" maxlength="2000" placeholder="Colour, brand, size, stickers, scratches, what's inside…">{{ request.form.get('description', v.description if v else '') }}</textarea></div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div><label class="label">Category</label>
+        <select class="select" name="category">{% for k, c in CATEGORIES.items() %}<option value="{{ k }}" {{ 'selected' if (request.form.get('category', v.category if v else 'other')) == k }}>{{ c[1] }}</option>{% endfor %}</select></div>
+      <div><label class="label">{{ 'Where did you lose it?' if kind=='lost' else 'Where did you find it?' }}</label>
+        <select class="select" name="location">{% for l in LOCATIONS %}<option {{ 'selected' if (request.form.get('location', v.location if v else '')) == l }}>{{ l }}</option>{% endfor %}</select></div>
+      <div><label class="label">Date</label>
+        <input class="input" type="date" name="date_event" max="{{ today }}" required value="{{ request.form.get('date_event', v.date_event.isoformat() if v else today) }}"/></div>
+    </div>
+    {% if kind == 'found' %}
+    <div><label class="label">Verification question <span class="t-3">(recommended)</span></label>
+      <input class="input" name="security_question" maxlength="200" placeholder="e.g. What sticker is on the back of the phone?" value="{{ request.form.get('security_question', v.security_question if v else '') }}"/>
+      <div class="hint">Claimants must answer this. Only you know the real answer, so keep it out of the description.</div></div>
+    {% endif %}
+  </div>
+
+  <div class="space-y-4">
+    <div class="card">
+      <label class="label">Photo <span class="t-3">(optional)</span></label>
+      <div id="dropzone" class="dropzone"><div class="dz-content">
+        {% if item and item.image %}<img src="{{ url_for('static', filename='uploads/' ~ item.image) }}" alt=""/><div class="text-xs">Click to replace</div>
+        {% else %}<span class="msymbol" style="font-size:40px">add_photo_alternate</span><div style="font-size:.82rem;font-weight:600">Drop an image or click to upload</div><div class="text-xs">PNG, JPG, WEBP · max 5 MB</div>{% endif %}
+      </div><input type="file" name="image" accept="image/*" hidden/></div>
+    </div>
+    <div class="card" style="background:var(--primary-light);border-color:transparent">
+      <div class="flex gap-3"><span class="msymbol fill t-primary">auto_awesome</span>
+        <div style="font-size:.82rem" class="t-2"><b class="t-1">Smart matching is on.</b> As soon as you submit, we compare your report with every open {{ 'found' if kind=='lost' else 'lost' }} report and notify you of strong matches.</div></div>
+    </div>
+    <div class="flex gap-3">
+      <button class="btn btn-primary btn-lg" style="flex:1"><span class="msymbol sm-icon">send</span>{{ 'Save changes' if item else 'Submit report' }}</button>
+      <a href="{{ url_for('items.detail', item_id=item.id) if item else url_for('items.browse') }}" class="btn btn-outline btn-lg">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

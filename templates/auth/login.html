@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Sign in — Campus Lost & Found{% endblock %}
+{% block full_page %}
+<div class="auth-wrap">
+  <div class="auth-hero">
+    <div class="flex items-center gap-3">
+      <div class="logo-mark" style="background:rgba(255,255,255,.18)"><span class="msymbol fill" style="font-size:20px">travel_explore</span></div>
+      <span class="logo-text" style="font-size:1.05rem">Campus Lost &amp; Found</span>
+    </div>
+    <div>
+      <h2 style="font-size:2.6rem;font-weight:800;line-height:1.1;letter-spacing:-.03em;margin:0 0 1rem">Lost something?<br/>Let's bring it home.</h2>
+      <p style="opacity:.85;font-size:1rem;max-width:430px;margin:0 0 1.5rem">One place for the whole campus to report, match and recover belongings, securely.</p>
+      <div class="hero-feature"><div class="ic"><span class="msymbol">auto_awesome</span></div><div><b>Smart matching</b><div style="opacity:.8;font-size:.85rem">Lost and found reports are compared automatically by text, place and date.</div></div></div>
+      <div class="hero-feature"><div class="ic"><span class="msymbol">qr_code_2</span></div><div><b>QR hand-over</b><div style="opacity:.8;font-size:.85rem">Approved owners receive a QR pass that security can verify on collection.</div></div></div>
+      <div class="hero-feature"><div class="ic"><span class="msymbol">chat</span></div><div><b>Private chat</b><div style="opacity:.8;font-size:.85rem">Talk to the finder or owner without sharing your phone number.</div></div></div>
+    </div>
+    <div style="opacity:.7;font-size:.78rem">© Campus Lost &amp; Found · Built with Flask</div>
+  </div>
+
+  <div class="auth-panel">
+    <div style="width:100%;max-width:400px">
+      <h1 class="font-display" style="font-size:1.75rem;font-weight:800;margin:0 0 .3rem">Welcome back</h1>
+      <p class="t-2" style="margin:0 0 1.5rem;font-size:.9rem">Sign in to manage your reports and claims.</p>
+      <form method="post" class="space-y-4">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+        <div><label class="label">Email</label>
+          <div class="input-icon"><span class="msymbol">mail</span><input class="input" type="email" name="email" placeholder="you@campus.edu" required autofocus/></div></div>
+        <div><label class="label">Password</label>
+          <div class="input-icon"><span class="msymbol">lock</span><input class="input" type="password" name="password" placeholder="••••••••" required/></div></div>
+        <button class="btn btn-primary btn-lg btn-block" type="submit">Sign in</button>
+      </form>
+      {% if demo %}
+      <div class="flex items-center gap-3 my-5"><div class="divider" style="flex:1;margin:0"></div><span class="t-3" style="font-size:.72rem;font-weight:600">TRY A DEMO</span><div class="divider" style="flex:1;margin:0"></div></div>
+      <div class="grid grid-cols-2 gap-3">
+        <form method="post" action="{{ url_for('auth.demo', role='student') }}" style="margin:0"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+          <button class="btn btn-outline btn-block"><span class="msymbol sm-icon">school</span>Student</button></form>
+        <form method="post" action="{{ url_for('auth.demo', role='admin') }}" style="margin:0"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+          <button class="btn btn-outline btn-block"><span class="msymbol sm-icon">admin_panel_settings</span>Admin</button></form>
+      </div>
+      {% endif %}
+      <p class="t-2" style="text-align:center;font-size:.85rem;margin-top:1.5rem">New here? <a href="{{ url_for('auth.register') }}" class="t-primary" style="font-weight:600">Create an account</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

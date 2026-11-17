@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Verify hand-over — Campus Lost & Found{% endblock %}
+{% block page_title %}Verify hand-over{% endblock %}
+{% block page_sub %}<p class="t-3" style="font-size:.85rem;margin:0">Scan the claimant's QR pass or enter the code</p>{% endblock %}
+{% block content %}
+<div style="max-width:560px;margin:0 auto" class="space-y-6">
+  {% if c %}
+  <div class="card">
+    <div class="flex items-center gap-3 mb-4">
+      {% set cc = {'pending':'amber','approved':'green','rejected':'red','completed':'blue'} %}
+      <div class="icon-tile tint-{{ cc[c.status] }}"><span class="msymbol fill">{{ 'task_alt' if c.status=='completed' else 'qr_code_2' }}</span></div>
+      <div><h2 class="card-title">{{ c.item.title }}</h2><span class="badge tint-{{ cc[c.status] }}" style="margin-top:.2rem">{{ c.status|capitalize }}</span></div>
+    </div>
+    <dl class="kv">
+      <dt>Claimant</dt><dd>{{ c.claimant.name }}{% if c.claimant.department %} <span class="t-3">· {{ c.claimant.department }}</span>{% endif %}</dd>
+      <dt>Email</dt><dd>{{ c.claimant.email }}</dd>
+      <dt>Item</dt><dd>{{ c.item.title }} ({{ c.item.location }})</dd>
+      <dt>Their proof</dt><dd style="font-weight:500">{{ c.proof }}</dd>
+    </dl>
+    {% if c.status == 'approved' %}
+    <form method="post" action="{{ url_for('claims.complete', token=c.qr_token) }}" class="mt-5" data-confirm="Confirm the item was physically handed to {{ c.claimant.name }}?">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+      <button class="btn btn-success btn-lg btn-block"><span class="msymbol sm-icon">handshake</span>Confirm hand-over</button></form>
+    {% elif c.status == 'completed' %}<div class="mt-4 t-3" style="font-size:.85rem">✅ Already handed over on {{ c.resolved_at.strftime('%d %b %Y, %H:%M') }}.</div>{% endif %}
+  </div>
+  {% endif %}
+  <div class="card">
+    <h2 class="card-title mb-3">{{ 'Verify another pass' if c else 'Scan QR pass' }}</h2>
+    <div id="reader" style="width:100%;border-radius:var(--r-md);overflow:hidden"></div>
+    <button type="button" id="scan-btn" class="btn btn-outline btn-block mb-3"><span class="msymbol sm-icon">photo_camera</span>Start camera scan</button>
+    <form method="post" id="verify-form" class="flex gap-2">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+      <input class="input" name="token" id="token-input" placeholder="…or paste the pass code" required/>
+      <button class="btn btn-primary">Verify</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+document.getElementById('scan-btn').addEventListener('click', async function () {
+  if (typeof Html5Qrcode === 'undefined') { alert('Scanner library failed to load. Paste the code instead.'); return; }
+  this.disabled = true;
+  const scanner = new Html5Qrcode('reader');
+  try {
+    await scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: 220 }, async (text) => {
+      await scanner.stop();
+      document.getElementById('token-input').value = text;
+      document.getElementById('verify-form').submit();
+    });
+  } catch (e) { alert('Camera unavailable. Paste the code instead.'); this.disabled = false; }
+});
+</script>
+{% endblock %}

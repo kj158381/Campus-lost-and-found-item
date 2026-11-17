@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Claims — Campus Lost & Found{% endblock %}
+{% block page_title %}Claims{% endblock %}
+{% block page_sub %}<p class="t-3" style="font-size:.85rem;margin:0">Ownership claims you made and received</p>{% endblock %}
+{% block content %}
+{% set cc = {'pending':'amber','approved':'green','rejected':'red','completed':'blue'} %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="card">
+    <h2 class="card-title mb-4">Claims I made</h2>
+    {% for c in mine %}
+    <a href="{{ url_for('items.detail', item_id=c.item_id) }}" class="flex items-center gap-3 p-3 card-hover mb-3" style="border:1px solid var(--border);border-radius:var(--r-lg);text-decoration:none">
+      <div class="icon-tile sm tint-{{ cc[c.status] }}"><span class="msymbol fill">verified_user</span></div>
+      <div style="flex:1;min-width:0"><div class="t-1" style="font-weight:600;font-size:.88rem">{{ c.item.title }}</div><div class="t-3" style="font-size:.74rem">{{ time_ago(c.created_at) }}</div></div>
+      <span class="badge tint-{{ cc[c.status] }}">{{ c.status|capitalize }}</span>
+      {% if c.status in ('approved','completed') %}<span class="btn btn-primary btn-sm" onclick="event.preventDefault();location.href='{{ url_for('claims.view', cid=c.id) }}'">QR pass</span>{% endif %}
+    </a>
+    {% else %}<div class="empty" style="padding:1.5rem 0"><span class="msymbol">verified_user</span><p style="margin:.3rem 0 0;font-size:.85rem">You haven't claimed any items.</p></div>{% endfor %}
+  </div>
+  <div class="card">
+    <h2 class="card-title mb-4">Claims on my found items</h2>
+    {% for c in incoming %}
+    <a href="{{ url_for('items.detail', item_id=c.item_id) }}" class="flex items-center gap-3 p-3 card-hover mb-3" style="border:1px solid var(--border);border-radius:var(--r-lg);text-decoration:none">
+      <div class="avatar" style="background:{{ c.claimant.avatar_color }}">{{ c.claimant.initials }}</div>
+      <div style="flex:1;min-width:0"><div class="t-1" style="font-weight:600;font-size:.88rem">{{ c.claimant.name }}</div><div class="t-3" style="font-size:.74rem">on {{ c.item.title }} · {{ time_ago(c.created_at) }}</div></div>
+      <span class="badge tint-{{ cc[c.status] }}">{{ c.status|capitalize }}</span>
+    </a>
+    {% else %}<div class="empty" style="padding:1.5rem 0"><span class="msymbol">inbox</span><p style="margin:.3rem 0 0;font-size:.85rem">No claims on your found items.</p></div>{% endfor %}
+  </div>
+</div>
+{% endblock %}

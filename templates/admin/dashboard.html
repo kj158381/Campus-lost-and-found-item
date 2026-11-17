@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Analytics — Campus Lost & Found{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+{% block page_sub %}<p class="t-3" style="font-size:.85rem;margin:0">Security desk overview</p>{% endblock %}
+{% block header_actions %}<a href="{{ url_for('claims.verify_home') }}" class="btn btn-primary"><span class="msymbol sm-icon">qr_code_scanner</span>Verify hand-over</a>{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>{% endblock %}
+{% block content %}
+<div class="space-y-6">
+  <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+    {% set cards = [('Users',stats.users,'group','blue'),('Lost reports',stats.lost,'search_off','red'),('Found reports',stats.found,'inventory_2','green'),('Returned',stats.returned,'task_alt','teal'),('Pending claims',stats.pending_claims,'pending_actions','amber'),('Matches',stats.matches,'auto_awesome','purple')] %}
+    {% for l, v, i, t in cards %}
+    <div class="card card-hover" style="padding:1.1rem"><div class="icon-tile sm tint-{{ t }} mb-3"><span class="msymbol fill">{{ i }}</span></div>
+      <div class="stat-value" style="font-size:1.6rem">{{ v }}</div><div class="stat-label">{{ l }}</div></div>
+    {% endfor %}
+  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="card lg:col-span-2"><h2 class="card-title mb-3">Reports — last 14 days</h2><div style="height:280px"><canvas id="c-days"></canvas></div></div>
+    <div class="card"><h2 class="card-title mb-3">By category</h2><div style="height:280px"><canvas id="c-cat"></canvas></div></div>
+  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card"><h2 class="card-title mb-3">Hotspot locations</h2><div style="height:260px"><canvas id="c-loc"></canvas></div></div>
+    <div class="card">
+      <div class="flex items-center justify-between mb-3"><h2 class="card-title">Claims awaiting review</h2><a href="{{ url_for('admin.claims', status='pending') }}" class="t-primary" style="font-size:.78rem;font-weight:600;text-decoration:none">View all →</a></div>
+      {% for c in pending %}
+      <a href="{{ url_for('items.detail', item_id=c.item_id) }}" class="flex items-center gap-3 p-3 card-hover mb-2" style="border:1px solid var(--border);border-radius:var(--r-lg);text-decoration:none">
+        <div class="avatar" style="background:{{ c.claimant.avatar_color }}">{{ c.claimant.initials }}</div>
+        <div style="flex:1"><div class="t-1" style="font-weight:600;font-size:.86rem">{{ c.claimant.name }}</div><div class="t-3" style="font-size:.74rem">{{ c.item.title }}</div></div>
+        <span class="t-3" style="font-size:.7rem">{{ time_ago(c.created_at) }}</span></a>
+      {% else %}<div class="empty" style="padding:2rem 0"><span class="msymbol">task_alt</span><p style="margin:.3rem 0 0;font-size:.85rem">No pending claims.</p></div>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const D = {{ chart|tojson }};
+const dark = document.documentElement.classList.contains('dark');
+const grid = dark ? 'rgba(255,255,255,.08)' : 'rgba(13,17,23,.07)';
+const txt = dark ? '#A9B4C4' : '#4A5568';
+Chart.defaults.font.family = "'DM Sans', sans-serif"; Chart.defaults.color = txt;
+const palette = ['#006BFF','#00C2A8','#8B5CF6','#F59E0B','#EF4444','#10B981','#EC4899','#64748B','#0EA5E9','#84CC16'];
+new Chart(document.getElementById('c-days'), { type: 'line',
+  data: { labels: D.days, datasets: [
+    { label: 'Lost', data: D.lost, borderColor: '#EF4444', backgroundColor: 'rgba(239,68,68,.12)', fill: true, tension: .35, pointRadius: 3 },
+    { label: 'Found', data: D.found, borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,.12)', fill: true, tension: .35, pointRadius: 3 }]},
+  options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: grid } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'bottom' } } } });
+new Chart(document.getElementById('c-cat'), { type: 'doughnut',
+  data: { labels: D.cat_labels, datasets: [{ data: D.cat_values, backgroundColor: palette, borderWidth: 0 }] },
+  options: { maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } } } });
+new Chart(document.getElementById('c-loc'), { type: 'bar',
+  data: { labels: D.loc_labels, datasets: [{ data: D.loc_values, backgroundColor: '#006BFF', borderRadius: 8 }] },
+  options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: grid } }, y: { grid: { display: false } } } } });
+</script>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Create account — Campus Lost & Found{% endblock %}
+{% block full_page %}
+<div class="auth-panel" style="min-height:100vh">
+  <div class="card" style="width:100%;max-width:440px;padding:2rem">
+    <div class="flex items-center gap-3 mb-5">
+      <div class="logo-mark"><span class="msymbol fill" style="font-size:20px">travel_explore</span></div>
+      <div class="logo-text" style="font-size:1rem">Campus Lost &amp; Found</div>
+    </div>
+    <h1 class="font-display" style="font-size:1.5rem;font-weight:800;margin:0 0 .3rem">Create your account</h1>
+    <p class="t-2" style="margin:0 0 1.4rem;font-size:.88rem">It takes less than a minute.</p>
+    <form method="post" class="space-y-4">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+      <div><label class="label">Full name</label><input class="input" name="name" required value="{{ request.form.get('name','') }}"/></div>
+      <div><label class="label">Campus email</label><input class="input" type="email" name="email" required value="{{ request.form.get('email','') }}"/></div>
+      <div><label class="label">Department <span class="t-3">(optional)</span></label><input class="input" name="department" value="{{ request.form.get('department','') }}"/></div>
+      <div><label class="label">Password</label><input class="input" type="password" name="password" minlength="6" required/><div class="hint">At least 6 characters.</div></div>
+      <button class="btn btn-primary btn-lg btn-block">Create account</button>
+    </form>
+    <p class="t-2" style="text-align:center;font-size:.85rem;margin:1.2rem 0 0">Already registered? <a href="{{ url_for('auth.login') }}" class="t-primary" style="font-weight:600">Sign in</a></p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Chat with {{ other.name }} — Campus Lost & Found{% endblock %}
+{% block page_title %}{{ other.name }}{% endblock %}
+{% block page_sub %}<p class="t-3" style="font-size:.85rem;margin:0">About <a href="{{ url_for('items.detail', item_id=item.id) }}" class="t-primary" style="text-decoration:none;font-weight:600">{{ item.title }}</a></p>{% endblock %}
+{% block header_actions %}<a href="{{ url_for('chat.inbox') }}" class="btn btn-ghost"><span class="msymbol sm-icon">arrow_back</span>Inbox</a>{% endblock %}
+{% block content %}
+<div style="max-width:760px" class="card" >
+  <div class="chat-box" id="chat" data-item="{{ item.id }}" data-other="{{ other.id }}" data-last="{{ last_id }}" data-lastday="{{ msgs[-1].created_at.strftime('%d %b') if msgs else '' }}">
+    <div class="chat-log" id="chat-log">
+      {% set ns = namespace(day='') %}
+      {% for m in msgs %}
+        {% set d = m.created_at.strftime('%d %b') %}
+        {% if d != ns.day %}<div class="day-sep">{{ d }}</div>{% set ns.day = d %}{% endif %}
+        <div class="bubble {{ 'mine' if m.sender_id == user.id else 'theirs' }}">{{ m.body }}<small>{{ m.created_at.strftime('%H:%M') }}</small></div>
+      {% endfor %}
+      {% if not msgs %}<div id="chat-empty" class="empty" style="margin:auto"><span class="msymbol">waving_hand</span><p style="margin:.3rem 0 0;font-size:.85rem">Say hello and describe the item to confirm details.</p></div>{% endif %}
+    </div>
+    <form id="chat-form" class="flex gap-2 mt-3" style="margin-bottom:0">
+      <textarea id="chat-input" class="textarea" rows="1" style="min-height:44px;resize:none" maxlength="1000" placeholder="Type a message… (Enter to send)"></textarea>
+      <button class="btn btn-primary btn-icon" style="width:48px;height:auto" type="submit"><span class="msymbol">send</span></button>
+    </form>
+  </div>
+  <div class="hint mt-2">Tip: don't share passwords or payment details. Meet at a public campus spot or the security desk.</div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/chat.js') }}"></script>{% endblock %}

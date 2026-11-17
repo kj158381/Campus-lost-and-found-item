@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% from "_macros.html" import item_card, thumb, status_badge with context %}
+{% block title %}Dashboard — Campus Lost & Found{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_sub %}<p class="t-3" style="font-size:.85rem;margin:0">Good {{ 'morning' if hour < 12 else ('afternoon' if hour < 17 else 'evening') }}, {{ user.first_name }} 👋</p>{% endblock %}
+{% block header_actions %}
+  <a href="{{ url_for('items.new', kind='found') }}" class="btn btn-outline"><span class="msymbol sm-icon">add_task</span>I Found Something</a>
+  <a href="{{ url_for('items.new', kind='lost') }}" class="btn btn-primary"><span class="msymbol sm-icon">add</span>I Lost Something</a>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <!-- Stat cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    {% set stats = [
+      ('Open lost reports', total_lost, 'search_off', 'red', 'Waiting to be found'),
+      ('Open found items', total_found, 'inventory_2', 'green', 'Waiting for owners'),
+      ('Items returned', returned, 'task_alt', 'blue', 'Happy reunions'),
+      ('Recovery rate', recovery_rate ~ '%', 'trending_up', 'purple', 'Returned vs. all reports'),
+    ] %}
+    {% for label, val, icon, tint, sub in stats %}
+    <div class="card card-hover">
+      <div class="flex items-center justify-between mb-3"><span class="stat-label">{{ label }}</span>
+        <div class="icon-tile sm tint-{{ tint }}"><span class="msymbol fill">{{ icon }}</span></div></div>
+      <div class="stat-value">{{ val }}</div><div class="t-3" style="font-size:.72rem;margin-top:.25rem">{{ sub }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if incoming %}
+  <a href="{{ url_for('claims.listing') }}" class="card flex items-center gap-4" style="text-decoration:none;border-color:var(--amber)">
+    <div class="icon-tile tint-amber"><span class="msymbol fill">pending_actions</span></div>
+    <div style="flex:1"><div class="font-display t-1" style="font-weight:700">{{ incoming }} claim{{ 's' if incoming != 1 }} waiting for your review</div>
+      <div class="t-3" style="font-size:.8rem">Someone says an item you found belongs to them.</div></div>
+    <span class="msymbol t-3">arrow_forward</span>
+  </a>
+  {% endif %}
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Smart matches -->
+    <div class="card lg:col-span-2">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2"><span class="msymbol fill t-primary">auto_awesome</span><h2 class="card-title">Smart matches for your reports</h2></div>
+        <a href="{{ url_for('items.mine') }}" class="t-primary" style="font-size:.78rem;font-weight:600;text-decoration:none">My reports →</a>
+      </div>
+      {% if matches %}
+      <div class="space-y-3">
+        {% for m in matches %}
+        <a href="{{ url_for('items.detail', item_id=m.other.id) }}" class="flex items-center gap-4 p-3 card-hover" style="border:1px solid var(--border);border-radius:var(--r-lg);text-decoration:none">
+          <div class="match-ring" style="--p:{{ (m.score*100)|round|int }}"><span>{{ (m.score*100)|round|int }}%</span></div>
+          <div style="flex:1;min-width:0">
+            <div class="t-3" style="font-size:.72rem">Your {{ m.mine.kind }} report</div>
+            <div class="t-1" style="font-weight:600;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.mine.title }}</div>
+            <div class="t-3" style="font-size:.78rem;margin-top:.2rem">may match <b class="t-2">{{ m.other.title }}</b> · {{ m.other.location }}</div>
+          </div>
+          <span class="badge kind-{{ m.other.kind }}">{{ m.other.kind|upper }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty"><span class="msymbol">auto_awesome</span><p style="margin:.4rem 0 0;font-size:.88rem">No matches yet. Report an item and we'll keep watching for you.</p></div>
+      {% endif %}
+    </div>
+
+    <!-- Categories -->
+    <div class="card">
+      <h2 class="card-title mb-4">Open items by category</h2>
+      <div class="space-y-4">
+        {% for key, n in cat_rows %}
+        {% set c = CATEGORIES.get(key, CATEGORIES['other']) %}
+        <div>
+          <div class="flex items-center justify-between mb-1" style="font-size:.8rem">
+            <span class="flex items-center gap-2 t-2" style="font-weight:600"><span class="msymbol sm-icon">{{ c[0] }}</span>{{ c[1] }}</span><span class="t-1" style="font-weight:700">{{ n }}</span></div>
+          <div class="progress"><span style="width:{{ (n / cat_max * 100)|round|int }}%"></span></div>
+        </div>
+        {% else %}<div class="empty" style="padding:1.5rem 0">Nothing reported yet.</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent -->
+  <div>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="card-title" style="font-size:1.1rem">Recently reported</h2>
+      <a href="{{ url_for('items.browse') }}" class="t-primary" style="font-size:.8rem;font-weight:600;text-decoration:none">Browse all →</a>
+    </div>
+    <div class="item-grid">{% for it in recent %}{{ item_card(it) }}{% endfor %}</div>
+  </div>
+</div>
+{% endblock %}

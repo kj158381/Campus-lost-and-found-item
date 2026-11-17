@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}All Claims — Campus Lost & Found{% endblock %}
+{% block page_title %}All Claims{% endblock %}
+{% block content %}
+<div class="flex gap-2 mb-4 flex-wrap">
+  <a class="chip {{ 'active' if not status }}" href="{{ url_for('admin.claims') }}">All</a>
+  {% for s in ['pending','approved','completed','rejected'] %}<a class="chip {{ 'active' if status == s }}" href="{{ url_for('admin.claims', status=s) }}">{{ s|capitalize }}</a>{% endfor %}
+</div>
+{% set cc = {'pending':'amber','approved':'green','rejected':'red','completed':'blue'} %}
+<div class="card" style="padding:0"><div class="table-wrap"><table class="tbl">
+  <thead><tr><th>Claim</th><th>Item</th><th>Claimant</th><th>Finder</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody>
+  {% for c in claims %}
+  <tr><td class="t-3">#{{ '%04d' % c.id }}</td>
+    <td><a class="t-1" style="font-weight:600;text-decoration:none" href="{{ url_for('items.detail', item_id=c.item_id) }}">{{ c.item.title }}</a></td>
+    <td class="t-2">{{ c.claimant.name }}</td><td class="t-2">{{ c.item.owner.name }}</td>
+    <td><span class="badge tint-{{ cc[c.status] }}">{{ c.status|capitalize }}</span></td><td class="t-3">{{ time_ago(c.created_at) }}</td>
+    <td style="text-align:right">{% if c.status == 'approved' %}<a class="btn btn-success btn-sm" href="{{ url_for('claims.verify', token=c.qr_token) }}">Verify</a>{% else %}<a class="btn btn-ghost btn-sm" href="{{ url_for('items.detail', item_id=c.item_id) }}">Open</a>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="7"><div class="empty">No claims.</div></td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

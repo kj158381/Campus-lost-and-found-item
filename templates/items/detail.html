@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, item_card with context %}
+{% block title %}{{ item.title }} — Campus Lost & Found{% endblock %}
+{% block page_title %}{{ item.title }}{% endblock %}
+{% block page_sub %}<p class="t-3" style="font-size:.85rem;margin:0">Reported {{ time_ago(item.created_at) }} by {{ item.owner.name }}</p>{% endblock %}
+{% block header_actions %}
+  <a href="{{ url_for('items.browse') }}" class="btn btn-ghost"><span class="msymbol sm-icon">arrow_back</span>Back</a>
+  {% if is_owner or user.is_admin %}
+    <a href="{{ url_for('items.edit', item_id=item.id) }}" class="btn btn-outline"><span class="msymbol sm-icon">edit</span>Edit</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+{% set c = CATEGORIES.get(item.category, CATEGORIES['other']) %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="lg:col-span-2 space-y-6">
+    <div class="detail-hero tint-{{ c[2] }}">
+      {% if item.image %}<img src="{{ url_for('static', filename='uploads/' ~ item.image) }}" alt="{{ item.title }}"/>
+      {% else %}<span class="msymbol fill">{{ c[0] }}</span>{% endif %}
+    </div>
+    <div class="card">
+      <div class="flex items-center gap-2 mb-3 flex-wrap">
+        <span class="badge kind-{{ item.kind }}">{{ item.kind|upper }}</span>
+        <span class="badge tint-{{ c[2] }}">{{ c[1] }}</span>{{ status_badge(item) }}
+      </div>
+      <h2 class="card-title mb-2">Description</h2>
+      <p class="t-2" style="font-size:.9rem;white-space:pre-wrap;margin:0">{{ item.description or 'No description provided.' }}</p>
+      <div class="divider"></div>
+      <dl class="kv">
+        <dt>Location</dt><dd>{{ item.location or '—' }}</dd>
+        <dt>Date {{ item.kind }}</dt><dd>{{ item.date_event.strftime('%A, %d %B %Y') }}</dd>
+        <dt>Reported by</dt><dd>{{ item.owner.name }}{% if item.owner.department %} · <span class="t-3">{{ item.owner.department }}</span>{% endif %}</dd>
+      </dl>
+    </div>
+
+    {% if matches %}
+    <div class="card">
+      <div class="flex items-center gap-2 mb-4"><span class="msymbol fill t-primary">auto_awesome</span><h2 class="card-title">Possible matches</h2></div>
+      <div class="space-y-3">
+        {% for m in matches %}
+        <a href="{{ url_for('items.detail', item_id=m.item.id) }}" class="flex items-center gap-4 p-3 card-hover" style="border:1px solid var(--border);border-radius:var(--r-lg);text-decoration:none">
+          <div class="match-ring" style="--p:{{ (m.score*100)|round|int }}"><span>{{ (m.score*100)|round|int }}%</span></div>
+          <div style="flex:1;min-width:0"><div class="t-1" style="font-weight:600;font-size:.9rem">{{ m.item.title }}</div>
+            <div class="t-3" style="font-size:.78rem">{{ m.item.location }} · {{ m.item.date_event.strftime('%d %b') }} · {{ m.label }}</div></div>
+          <span class="badge kind-{{ m.item.kind }}">{{ m.item.kind|upper }}</span>
+        </a>{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if claims %}
+    <div class="card">
+      <h2 class="card-title mb-4">Ownership claims ({{ claims|length }})</h2>
+      <div class="space-y-4">
+        {% for cl in claims %}
+        <div style="border:1px solid var(--border);border-radius:var(--r-lg);padding:1rem">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3"><div class="avatar" style="background:{{ cl.claimant.avatar_color }}">{{ cl.claimant.initials }}</div>
+              <div><div class="t-1" style="font-weight:600;font-size:.88rem">{{ cl.claimant.name }}</div><div class="t-3" style="font-size:.72rem">{{ time_ago(cl.created_at) }}</div></div></div>
+            {% set cc = {'pending':'amber','approved':'green','rejected':'red','completed':'blue'} %}
+            <span class="badge tint-{{ cc[cl.status] }}">{{ cl.status|capitalize }}</span>
+          </div>
+          {% if item.security_question %}<div class="t-3 mt-3" style="font-size:.74rem">Q: {{ item.security_question }}</div>{% endif %}
+          <p class="t-1" style="font-size:.86rem;margin:.3rem 0 0;background:var(--surface-2);padding:.7rem .9rem;border-radius:var(--r-md)">{{ cl.proof }}</p>
+          <div class="flex gap-2 mt-3 flex-wrap">
+            {% if cl.status == 'pending' and item.status == 'open' %}
+              <form method="post" action="{{ url_for('claims.approve', cid=cl.id) }}" style="margin:0"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"/><button class="btn btn-success btn-sm"><span class="msymbol xs-icon">check</span>Approve &amp; issue QR</button></form>
+              <form method="post" action="{{ url_for('claims.reject', cid=cl.id) }}" style="margin:0"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"/><button class="btn btn-danger btn-sm">Reject</button></form>
+            {% endif %}
+            {% if cl.status in ('approved','completed') %}<a class="btn btn-outline btn-sm" href="{{ url_for('claims.view', cid=cl.id) }}"><span class="msymbol xs-icon">qr_code_2</span>View pass</a>{% endif %}
+            <a class="btn btn-ghost btn-sm" href="{{ url_for('chat.thread', item_id=item.id, other_id=cl.claimant_id) }}"><span class="msymbol xs-icon">chat</span>Message</a>
+          </div>
+        </div>{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right column -->
+  <div class="space-y-6">
+    <div class="card">
+      <h2 class="card-title mb-3">Posted by</h2>
+      <div class="flex items-center gap-3"><div class="avatar" style="background:{{ item.owner.avatar_color }}">{{ item.owner.initials }}</div>
+        <div><div class="t-1" style="font-weight:600;font-size:.9rem">{{ item.owner.name }}</div><div class="t-3" style="font-size:.75rem">{{ item.owner.department or item.owner.role|capitalize }}</div></div></div>
+      {% if not is_owner %}
+      <a href="{{ url_for('chat.thread', item_id=item.id, other_id=item.owner.id) }}" class="btn btn-outline btn-block mt-4"><span class="msymbol sm-icon">chat</span>Message {{ item.owner.first_name }}</a>
+      {% endif %}
+    </div>
+
+    {% if not is_owner %}
+      {% if item.kind == 'found' and item.status == 'open' and not my_claim %}
+      <div class="card" style="border-color:var(--primary)">
+        <h2 class="card-title mb-1">Is this yours?</h2>
+        <p class="t-3" style="font-size:.8rem;margin:0 0 .9rem">Prove ownership and the finder will review your claim.</p>
+        <form method="post" action="{{ url_for('claims.create', item_id=item.id) }}" class="space-y-3">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+          {% if item.security_question %}<div style="background:var(--primary-light);padding:.7rem .85rem;border-radius:var(--r-md);font-size:.82rem"><b class="t-primary">Verification question</b><div class="t-1 mt-1">{{ item.security_question }}</div></div>{% endif %}
+          <textarea class="textarea" name="proof" required minlength="8" maxlength="1000" placeholder="Answer the question and add any identifying details only the owner would know…"></textarea>
+          <button class="btn btn-primary btn-block"><span class="msymbol sm-icon">verified_user</span>Submit claim</button>
+        </form>
+      </div>
+      {% elif my_claim %}
+      <div class="card">
+        <h2 class="card-title mb-2">Your claim</h2>
+        {% set cc = {'pending':'amber','approved':'green','rejected':'red','completed':'blue'} %}
+        <span class="badge tint-{{ cc[my_claim.status] }}">{{ my_claim.status|capitalize }}</span>
+        <p class="t-3" style="font-size:.8rem;margin:.7rem 0 0">
+          {% if my_claim.status == 'pending' %}The finder is reviewing your proof.{% elif my_claim.status == 'approved' %}Approved! Show your QR pass to collect the item.{% elif my_claim.status == 'completed' %}This item has been handed over to you.{% else %}This claim wasn't approved.{% endif %}</p>
+        {% if my_claim.status in ('approved','completed') %}<a href="{{ url_for('claims.view', cid=my_claim.id) }}" class="btn btn-primary btn-block mt-3"><span class="msymbol sm-icon">qr_code_2</span>Open QR pass</a>{% endif %}
+      </div>
+      {% elif item.kind == 'lost' and item.status == 'open' %}
+      <div class="card" style="border-color:var(--green)">
+        <h2 class="card-title mb-1">Did you find this?</h2>
+        <p class="t-3" style="font-size:.8rem;margin:0 0 .9rem">Let the owner know and start a private chat to confirm details.</p>
+        <form method="post" action="{{ url_for('claims.i_found_it', item_id=item.id) }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+          <button class="btn btn-success btn-block"><span class="msymbol sm-icon">celebration</span>I found this item</button></form>
+      </div>
+      {% endif %}
+    {% endif %}
+
+    {% if is_owner or user.is_admin %}
+    <div class="card">
+      <h2 class="card-title mb-3">Manage report</h2>
+      <div class="space-y-2">
+        {% if item.status == 'open' %}
+        <form method="post" action="{{ url_for('items.set_status', item_id=item.id) }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"/><input type="hidden" name="status" value="closed"/>
+          <button class="btn btn-outline btn-block"><span class="msymbol sm-icon">task_alt</span>{{ 'Mark as recovered / close' if item.kind == 'lost' else 'Close report' }}</button></form>
+        {% elif item.status == 'closed' %}
+        <form method="post" action="{{ url_for('items.set_status', item_id=item.id) }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"/><input type="hidden" name="status" value="open"/>
+          <button class="btn btn-outline btn-block">Reopen report</button></form>{% endif %}
+        <form method="post" action="{{ url_for('items.delete', item_id=item.id) }}" data-confirm="Delete this report permanently?"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+          <button class="btn btn-danger btn-block"><span class="msymbol sm-icon">delete</span>Delete</button></form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Messages — Campus Lost & Found{% endblock %}
+{% block page_title %}Messages{% endblock %}
+{% block page_sub %}<p class="t-3" style="font-size:.85rem;margin:0">Private conversations about items</p>{% endblock %}
+{% block content %}
+<div class="card" style="padding:0;overflow:hidden;max-width:760px">
+  {% for t in threads %}
+  <a href="{{ url_for('chat.thread', item_id=t.item.id, other_id=t.other.id) }}" class="notif {{ 'unread' if t.unread }}">
+    <div class="avatar" style="background:{{ t.other.avatar_color }}">{{ t.other.initials }}</div>
+    <div style="flex:1;min-width:0">
+      <div class="flex items-center justify-between gap-2"><span class="t-1" style="font-weight:600;font-size:.88rem">{{ t.other.name }}</span><span class="t-3" style="font-size:.7rem">{{ time_ago(t.last.created_at) }}</span></div>
+      <div class="t-primary" style="font-size:.72rem;font-weight:600">re: {{ t.item.title }}</div>
+      <div class="t-2" style="font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ 'You: ' if t.last.sender_id == user.id }}{{ t.last.body }}</div>
+    </div>
+    {% if t.unread %}<span class="nav-badge" style="align-self:center">{{ t.unread }}</span>{% endif %}
+  </a>
+  {% else %}
+  <div class="empty"><span class="msymbol">forum</span><h3 class="font-display t-1" style="margin:.5rem 0 .2rem">No conversations yet</h3>
+    <p style="font-size:.88rem;margin:0">Open an item and tap “Message” to start chatting.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}

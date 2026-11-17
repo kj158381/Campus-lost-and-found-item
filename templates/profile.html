@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Profile — Campus Lost & Found{% endblock %}
+{% block page_title %}Profile{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="card text-center">
+    <div class="avatar avatar-lg" style="background:{{ user.avatar_color }};margin:0 auto .8rem">{{ user.initials }}</div>
+    <h2 class="font-display" style="font-size:1.15rem;font-weight:700;margin:0">{{ user.name }}</h2>
+    <div class="t-3" style="font-size:.82rem">{{ user.email }}</div>
+    <span class="badge tint-blue mt-2" style="text-transform:capitalize">{{ user.role }}</span>
+    <div class="divider"></div>
+    <div class="grid grid-cols-3 gap-2">
+      <div class="stat"><div class="stat-value" style="font-size:1.4rem">{{ stats.reports }}</div><div class="stat-label" style="font-size:.7rem">Reports</div></div>
+      <div class="stat"><div class="stat-value" style="font-size:1.4rem">{{ stats.returned }}</div><div class="stat-label" style="font-size:.7rem">Returned</div></div>
+      <div class="stat"><div class="stat-value" style="font-size:1.4rem">{{ stats.claims }}</div><div class="stat-label" style="font-size:.7rem">Claims</div></div>
+    </div>
+  </div>
+  <form method="post" class="card lg:col-span-2 space-y-4">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"/>
+    <h2 class="card-title">Account details</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div><label class="label">Full name</label><input class="input" name="name" value="{{ user.name }}" required/></div>
+      <div><label class="label">Department</label><input class="input" name="department" value="{{ user.department }}"/></div>
+      <div><label class="label">Phone <span class="t-3">(never shown publicly)</span></label><input class="input" name="phone" value="{{ user.phone }}"/></div>
+      <div><label class="label">Email</label><input class="input" value="{{ user.email }}" disabled/></div>
+    </div>
+    <div class="divider"></div>
+    <h2 class="card-title">Change password</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div><label class="label">Current password</label><input class="input" type="password" name="current_password" autocomplete="current-password"/></div>
+      <div><label class="label">New password</label><input class="input" type="password" name="new_password" minlength="6" autocomplete="new-password"/></div>
+    </div>
+    <button class="btn btn-primary">Save changes</button>
+  </form>
+</div>
+{% endblock %}

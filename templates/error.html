@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} — Campus Lost & Found{% endblock %}
+{% block full_page %}
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--bg)">
+  <div class="card" style="max-width:440px;text-align:center;padding:2.5rem">
+    <div class="icon-tile tint-blue" style="margin:0 auto 1rem;width:64px;height:64px;border-radius:18px"><span class="msymbol fill" style="font-size:34px">{{ 'lock' if code == 403 else 'travel_explore' }}</span></div>
+    <div class="font-display t-primary" style="font-size:3rem;font-weight:800;line-height:1">{{ code }}</div>
+    <h2 class="font-display" style="font-size:1.25rem;margin:.6rem 0 .4rem">{{ title }}</h2>
+    <p class="t-2" style="font-size:.9rem;margin:0 0 1.5rem">{{ msg }}</p>
+    <a href="/" class="btn btn-primary">Back to home</a>
+  </div>
+</div>
+{% endblock %}

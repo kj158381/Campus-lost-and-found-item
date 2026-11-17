@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_macros.html" import item_card, pager with context %}
+{% block title %}Browse Items — Campus Lost & Found{% endblock %}
+{% block page_title %}Browse Items{% endblock %}
+{% block page_sub %}<p class="t-3" style="font-size:.85rem;margin:0">{{ pagination.total }} report{{ 's' if pagination.total != 1 }} found</p>{% endblock %}
+{% block header_actions %}<a href="{{ url_for('items.new') }}" class="btn btn-primary"><span class="msymbol sm-icon">add</span>New Report</a>{% endblock %}
+
+{% block content %}
+<form method="get" class="card mb-6" style="padding:1rem">
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+    <div class="md:col-span-4 input-icon"><span class="msymbol">search</span>
+      <input class="input" name="q" value="{{ q }}" placeholder="Search title, description, place…"/></div>
+    <select class="select md:col-span-2" name="kind">
+      <option value="">Lost &amp; Found</option>
+      <option value="lost" {{ 'selected' if kind=='lost' }}>Lost only</option>
+      <option value="found" {{ 'selected' if kind=='found' }}>Found only</option></select>
+    <select class="select md:col-span-2" name="category">
+      <option value="">All categories</option>
+      {% for k, c in CATEGORIES.items() %}<option value="{{ k }}" {{ 'selected' if cat==k }}>{{ c[1] }}</option>{% endfor %}</select>
+    <select class="select md:col-span-2" name="location">
+      <option value="">All locations</option>
+      {% for l in LOCATIONS %}<option {{ 'selected' if loc==l }}>{{ l }}</option>{% endfor %}</select>
+    <select class="select md:col-span-1" name="status">
+      {% for k, v in STATUS_LABELS.items() %}<option value="{{ k }}" {{ 'selected' if status==k }}>{{ v }}</option>{% endfor %}</select>
+    <button class="btn btn-primary md:col-span-1"><span class="msymbol sm-icon">filter_alt</span></button>
+  </div>
+</form>
+
+{% if pagination.items %}
+<div class="item-grid">{% for it in pagination.items %}{{ item_card(it) }}{% endfor %}</div>
+{{ pager(pagination, 'items.browse', q=q, kind=kind, category=cat, location=loc, status=status) }}
+{% else %}
+<div class="card empty"><span class="msymbol">search_off</span><h3 class="font-display t-1" style="margin:.5rem 0 .2rem">No reports match your filters</h3>
+  <p style="margin:0 0 1rem;font-size:.88rem">Try clearing a filter, or report the item yourself.</p>
+  <a href="{{ url_for('items.new') }}" class="btn btn-primary">Report an item</a></div>
+{% endif %}
+{% endblock %}
